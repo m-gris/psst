@@ -41,6 +41,12 @@ let run_just ~cwd =
 let flatten_body lines =
   String.concat " && " lines
 
+let rec extract_strings json =
+  match json with
+  | `String s -> [String.trim s]
+  | `List items -> List.concat_map extract_strings items
+  | _ -> []
+
 let parse_recipes json_str =
   let json = Yojson.Safe.from_string json_str in
   match json with
@@ -51,13 +57,10 @@ let parse_recipes json_str =
          match recipe_json with
          | `Assoc fields ->
            let body = match List.assoc_opt "body" fields with
-             | Some (`List lines) ->
-               let strs = List.filter_map (function
-                 | `String s -> Some (String.trim s)
-                 | _ -> None
-               ) lines in
+             | Some body_json ->
+               let strs = extract_strings body_json in
                flatten_body strs
-             | _ -> ""
+             | None -> ""
            in
            let doc = match List.assoc_opt "doc" fields with
              | Some (`String s) -> Some s

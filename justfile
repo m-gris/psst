@@ -1,29 +1,38 @@
 # psst development recipes
 
-# Build the project
+# Build
 build:
-    opam exec -- dune build
+    @opam exec -- dune build
 
-# Run psst CLI with args
+# Run psst CLI
 run *ARGS:
-    opam exec -- dune exec psst -- {{ARGS}}
+    @opam exec -- dune exec psst -- {{ARGS}}
 
 # Run tests
 test:
-    opam exec -- dune test
+    @opam exec -- dune test
 
-# Clean build artifacts
+# Run tests with full output
+test-verbose:
+    @opam exec -- dune test --force
+
+# Clean and test
+retest:
+    @opam exec -- dune clean
+    @opam exec -- dune test
+
+# Clean
 clean:
-    opam exec -- dune clean
+    @opam exec -- dune clean
 
-# Format code
+# Format
 fmt:
-    opam exec -- dune fmt
+    @opam exec -- dune fmt
 
-# Install to opam switch
+# Install
 install:
-    opam exec -- dune install
+    @opam exec -- dune install
 
-# Watch and rebuild on changes
+# Watch
 watch:
-    opam exec -- dune build --watch
+    @opam exec -- dune build --watch
