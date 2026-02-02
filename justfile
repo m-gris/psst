@@ -4,8 +4,8 @@
 build:
     @opam exec -- dune build
 
-# Run psst CLI
-run *ARGS:
+# Run psst CLI (for args with spaces, use: opam exec -- dune exec psst -- ...)
+run +ARGS:
     @opam exec -- dune exec psst -- {{ARGS}}
 
 # Run tests
