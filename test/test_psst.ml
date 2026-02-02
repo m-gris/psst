@@ -21,6 +21,16 @@ let test_normalize_strips_opam_env () =
   let norm = Psst.Match.normalize cmd in
   Alcotest.(check string) "strips opam env" "dune build" norm
 
+let test_normalize_strips_opam_exec () =
+  let cmd = "opam exec -- dune build" in
+  let norm = Psst.Match.normalize cmd in
+  Alcotest.(check string) "strips opam exec" "dune build" norm
+
+let test_normalize_strips_at_prefix () =
+  let cmd = "@opam exec -- dune build" in
+  let norm = Psst.Match.normalize cmd in
+  Alcotest.(check string) "strips @ and opam exec" "dune build" norm
+
 let test_normalize_collapses_whitespace () =
   let cmd = "dune   build   @check" in
   let norm = Psst.Match.normalize cmd in
@@ -122,6 +132,8 @@ let () =
     ];
     "match", [
       Alcotest.test_case "normalize strips opam env" `Quick test_normalize_strips_opam_env;
+      Alcotest.test_case "normalize strips opam exec" `Quick test_normalize_strips_opam_exec;
+      Alcotest.test_case "normalize strips @ prefix" `Quick test_normalize_strips_at_prefix;
       Alcotest.test_case "normalize collapses whitespace" `Quick test_normalize_collapses_whitespace;
       Alcotest.test_case "similarity exact" `Quick test_similarity_exact;
       Alcotest.test_case "similarity with boilerplate" `Quick test_similarity_with_boilerplate;

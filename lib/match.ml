@@ -6,22 +6,33 @@ type result =
   | NoMatch
   | Match of { recipe: Recipe.t; similarity: float }
 
-let boilerplate_patterns = [
-  "eval $(opam env) &&";
-  "eval $(opam env)&&";
-  "eval \"$(opam env)\" &&";
-  "eval \"$(opam env)\"&&";
-]
-
 let normalize cmd =
   let cmd = String.trim cmd in
+  (* Strip leading @ (just's quiet modifier) *)
+  let cmd = if String.length cmd > 0 && cmd.[0] = '@'
+    then String.trim (String.sub cmd 1 (String.length cmd - 1))
+    else cmd in
+  (* Strip opam exec -- prefix *)
+  let cmd =
+    let prefix = "opam exec -- " in
+    let plen = String.length prefix in
+    if String.length cmd >= plen && String.sub cmd 0 plen = prefix
+    then String.trim (String.sub cmd plen (String.length cmd - plen))
+    else cmd in
+  (* Strip eval $(opam env) && prefix *)
+  let boilerplate = [
+    "eval $(opam env) &&";
+    "eval $(opam env)&&";
+    "eval \"$(opam env)\" &&";
+    "eval \"$(opam env)\"&&";
+  ] in
   let cmd = List.fold_left (fun c pat ->
     let pat_len = String.length pat in
     if String.length c >= pat_len &&
        String.sub c 0 pat_len = pat
     then String.trim (String.sub c pat_len (String.length c - pat_len))
     else c
-  ) cmd boilerplate_patterns in
+  ) cmd boilerplate in
   let buf = Buffer.create (String.length cmd) in
   let prev_space = ref false in
   String.iter (fun c ->
