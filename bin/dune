@@ -1,0 +1,14 @@
+(executable
+ (name cli)
+ (public_name psst)
+ (libraries psst))
+
+(executable
+ (name pre_tool_hook)
+ (public_name psst-pre-tool-hook)
+ (libraries psst))
+
+(executable
+ (name post_tool_hook)
+ (public_name psst-post-tool-hook)
+ (libraries psst))
