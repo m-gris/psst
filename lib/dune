@@ -1,3 +1,4 @@
 (library
  (name psst)
- (libraries yojson sqlite3 unix))
+ (libraries yojson sqlite3 unix)
+ (modules event store state match nudge hook_io correlate recipe config settings))

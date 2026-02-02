@@ -8,6 +8,10 @@
 let usage = {|psst — Recipe nudge tool for Claude Code
 
 Usage:
+  psst init                Configure Claude Code hooks
+  psst doctor              Verify installation
+  psst uninstall [--purge] Remove hooks (--purge also deletes data)
+
   psst dismiss <pattern>   Whitelist a command pattern
   psst status              Show whitelist and stats
   psst history             Show recent events
@@ -80,8 +84,25 @@ let history () =
     Printf.printf "[%s] %s (%s)\n" ts typ session
   ) events
 
+let init () =
+  Psst.Config.init ()
+
+let doctor () =
+  let success = Psst.Config.doctor () in
+  if not success then exit 1
+
+let uninstall args =
+  let purge = List.mem "--purge" args in
+  Psst.Config.uninstall ~purge
+
 let () =
   match Array.to_list Sys.argv with
+  | _ :: "init" :: _ ->
+    init ()
+  | _ :: "doctor" :: _ ->
+    doctor ()
+  | _ :: "uninstall" :: rest ->
+    uninstall rest
   | _ :: "dismiss" :: pattern :: rest ->
     let reason = match rest with
       | r :: _ -> Some r
