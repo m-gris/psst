@@ -33,6 +33,15 @@ let test_prefix_partial_no_match () =
   let recipes = [recipe "run" "dune exec psst -- {{ARGS}}"] in
   assert_no_match ~command:"dune exec" ~recipes
 
+(* BUG 3: Character-level prefix matching is too greedy *)
+let test_typo_suffix_no_match () =
+  let recipes = [recipe "build" "dune build"] in
+  assert_no_match ~command:"dune builds" ~recipes  (* typo with 's' *)
+
+let test_hyphenated_subcommand_no_match () =
+  let recipes = [recipe "build" "dune build"] in
+  assert_no_match ~command:"dune build-release" ~recipes  (* different subcommand *)
+
 (* Different tools sharing tokens should NOT match *)
 let test_docker_build_no_match () =
   let recipes = [recipe "build" "dune build"] in
@@ -59,6 +68,10 @@ let () =
     "prefix_containment", [
       Alcotest.test_case "dune exec other vs run recipe" `Quick test_prefix_containment_no_match;
       Alcotest.test_case "dune exec alone vs run recipe" `Quick test_prefix_partial_no_match;
+    ];
+    "char_level_prefix", [
+      Alcotest.test_case "dune builds (typo) vs dune build" `Quick test_typo_suffix_no_match;
+      Alcotest.test_case "dune build-release vs dune build" `Quick test_hyphenated_subcommand_no_match;
     ];
     "different_tool", [
       Alcotest.test_case "docker build vs dune build" `Quick test_docker_build_no_match;

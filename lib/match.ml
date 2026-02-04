@@ -60,16 +60,22 @@ let jaccard_similarity a b =
   if union_size = 0 then 0.0
   else float_of_int (List.length intersection) /. float_of_int union_size
 
+(* Check if prefix ends at a word boundary (space or end of string) *)
+let is_word_boundary s pos =
+  pos >= String.length s || s.[pos] = ' '
+
 let containment cmd recipe_body =
   let norm_cmd = normalize cmd in
   let norm_body = normalize recipe_body in
   if String.length norm_cmd = 0 || String.length norm_body = 0 then 0.0
   else if norm_cmd = norm_body then 1.0
   else if String.length norm_body <= String.length norm_cmd &&
-          String.sub norm_cmd 0 (String.length norm_body) = norm_body
+          String.sub norm_cmd 0 (String.length norm_body) = norm_body &&
+          is_word_boundary norm_cmd (String.length norm_body)
   then 0.95
   else if String.length norm_cmd <= String.length norm_body &&
-          String.sub norm_body 0 (String.length norm_cmd) = norm_cmd
+          String.sub norm_body 0 (String.length norm_cmd) = norm_cmd &&
+          is_word_boundary norm_body (String.length norm_cmd)
   then
     (* Command is prefix of recipe body. Require significant coverage
        to avoid "dune exec" matching "dune exec psst -- ..." *)
