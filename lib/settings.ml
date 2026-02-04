@@ -27,12 +27,12 @@ type t = {
 
 let psst_pre_hook = {
   matcher = "Bash";
-  hooks = [{ command = "psst pre"; type_ = "command" }];
+  hooks = [{ command = "psst-pre-tool-hook"; type_ = "command" }];
 }
 
 let psst_post_hook = {
   matcher = "Bash";
-  hooks = [{ command = "psst post"; type_ = "command" }];
+  hooks = [{ command = "psst-post-tool-hook"; type_ = "command" }];
 }
 
 (* ================================================================== *)
@@ -125,8 +125,8 @@ let empty = {
 
 let is_psst_hook (entry : hook_entry) =
   List.exists (fun cmd ->
-    String.length cmd.command >= 4 &&
-    String.sub cmd.command 0 4 = "psst"
+    let c = cmd.command in
+    String.length c >= 4 && String.sub c 0 4 = "psst"
   ) entry.hooks
 
 let has_pre_hook settings =

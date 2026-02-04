@@ -76,10 +76,13 @@ let extract_command tool_input =
 
 let write_pre_tool_output = function
   | Allow ->
-    print_string {|{"continue":true}|}
+    print_string {|{}|}
   | Deny { reason } ->
     let json = `Assoc [
-      ("continue", `Bool false);
-      ("reason", `String reason);
+      ("hookSpecificOutput", `Assoc [
+        ("hookEventName", `String "PreToolUse");
+        ("permissionDecision", `String "deny");
+        ("permissionDecisionReason", `String reason);
+      ]);
     ] in
     print_string (Yojson.Safe.to_string json)
