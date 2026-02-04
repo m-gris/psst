@@ -13,3 +13,11 @@
 (test
  (name test_settings)
  (libraries psst alcotest))
+
+(test
+ (name test_match_negative)
+ (libraries psst alcotest))
+
+(test
+ (name test_match_positive)
+ (libraries psst alcotest))

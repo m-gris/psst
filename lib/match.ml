@@ -70,13 +70,31 @@ let containment cmd recipe_body =
   then 0.95
   else if String.length norm_cmd <= String.length norm_body &&
           String.sub norm_body 0 (String.length norm_cmd) = norm_cmd
-  then 0.9
+  then
+    (* Command is prefix of recipe body. Require significant coverage
+       to avoid "dune exec" matching "dune exec psst -- ..." *)
+    let cmd_tokens = List.length (tokenize norm_cmd) in
+    let body_tokens = List.length (tokenize norm_body) in
+    if body_tokens > 0 && float_of_int cmd_tokens /. float_of_int body_tokens >= 0.5
+    then 0.9
+    else 0.0  (* Too short a prefix *)
   else 0.0
+
+let first_token s =
+  match tokenize (normalize s) with
+  | [] -> ""
+  | t :: _ -> t
 
 let similarity cmd recipe_body =
   let c = containment cmd recipe_body in
   if c > 0.0 then c
-  else jaccard_similarity (normalize cmd) (normalize recipe_body)
+  else
+    (* Jaccard fallback: require first tokens to match.
+       This prevents "test dune" from matching "dune test". *)
+    let cmd_first = first_token cmd in
+    let body_first = first_token recipe_body in
+    if cmd_first <> body_first then 0.0
+    else jaccard_similarity (normalize cmd) (normalize recipe_body)
 
 let best_match ~command ~threshold recipes =
   let candidates = List.filter_map (fun recipe ->
