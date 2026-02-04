@@ -37,20 +37,40 @@ let () =
       exit 0
     end;
 
-    match Psst.Match.best_match ~command ~threshold recipes with
-    | Psst.Match.NoMatch ->
-      Psst.Hook_io.write_pre_tool_output Allow
-    | Psst.Match.Match { recipe; similarity = _ } ->
-      let nudge_msg = Psst.Nudge.render ~recipe ~pattern in
-      let event = Psst.Event.NudgeIssued {
-        pattern;
-        recipe = Psst.Recipe.name recipe;
-        recipe_body = Psst.Recipe.body recipe;
-        session_id = input.session_id;
-        ts = Psst.Event.now ();
-      } in
-      Psst.Store.append ~path:db_path event;
+    (* Try chain matching first *)
+    match Psst.Match.match_chain ~command ~threshold recipes with
+    | Some segments ->
+      let nudge_msg = Psst.Nudge.render_chain ~segments ~pattern in
+      (* Store event for first matched recipe *)
+      let first_match = List.find_opt (fun s -> s.Psst.Match.matched_recipe <> None) segments in
+      (match first_match with
+       | Some { matched_recipe = Some recipe; _ } ->
+         let event = Psst.Event.NudgeIssued {
+           pattern;
+           recipe = Psst.Recipe.name recipe;
+           recipe_body = Psst.Recipe.body recipe;
+           session_id = input.session_id;
+           ts = Psst.Event.now ();
+         } in
+         Psst.Store.append ~path:db_path event
+       | _ -> ());
       Psst.Hook_io.write_pre_tool_output (Deny { reason = nudge_msg })
+    | None ->
+      (* Fall back to single command matching *)
+      match Psst.Match.best_match ~command ~threshold recipes with
+      | Psst.Match.NoMatch ->
+        Psst.Hook_io.write_pre_tool_output Allow
+      | Psst.Match.Match { recipe; similarity = _ } ->
+        let nudge_msg = Psst.Nudge.render ~recipe ~pattern in
+        let event = Psst.Event.NudgeIssued {
+          pattern;
+          recipe = Psst.Recipe.name recipe;
+          recipe_body = Psst.Recipe.body recipe;
+          session_id = input.session_id;
+          ts = Psst.Event.now ();
+        } in
+        Psst.Store.append ~path:db_path event;
+        Psst.Hook_io.write_pre_tool_output (Deny { reason = nudge_msg })
   with
   | e ->
     Printf.eprintf "psst pre_tool_hook error: %s\n" (Printexc.to_string e);

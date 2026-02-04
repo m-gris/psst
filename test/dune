@@ -21,3 +21,7 @@
 (test
  (name test_match_positive)
  (libraries psst alcotest))
+
+(test
+ (name test_chain)
+ (libraries psst alcotest))

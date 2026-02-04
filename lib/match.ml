@@ -111,3 +111,50 @@ let best_match ~command ~threshold recipes =
   match List.sort (fun (_, s1) (_, s2) -> compare s2 s1) candidates with
   | (recipe, sim) :: _ -> Match { recipe; similarity = sim }
   | [] -> NoMatch
+
+(* Chain matching: split by && || ; and match each segment *)
+
+type segment_match = {
+  segment: string;
+  operator: string option;  (* The operator AFTER this segment, if any *)
+  matched_recipe: Recipe.t option;
+}
+
+let split_chain cmd =
+  (* Split on &&, ||, ; while preserving the operators *)
+  let re = Str.regexp {|\( *&& *\)\|\( *|| *\)\|\( *; *\)|} in
+  let parts = Str.full_split re cmd in
+  let rec process acc current_seg = function
+    | [] ->
+      let seg = String.trim current_seg in
+      if seg <> "" then { segment = seg; operator = None; matched_recipe = None } :: acc
+      else acc
+    | Str.Text t :: rest ->
+      process acc (current_seg ^ t) rest
+    | Str.Delim d :: rest ->
+      let seg = String.trim current_seg in
+      let op = String.trim d in
+      if seg <> "" then
+        process ({ segment = seg; operator = Some op; matched_recipe = None } :: acc) "" rest
+      else
+        process acc "" rest
+  in
+  List.rev (process [] "" parts)
+
+let match_chain ~command ~threshold recipes =
+  let segments = split_chain command in
+  if List.length segments <= 1 then
+    (* Not a chain, use regular matching *)
+    None
+  else
+    let matched_segments = List.map (fun seg ->
+      let result = best_match ~command:seg.segment ~threshold recipes in
+      match result with
+      | Match { recipe; _ } -> { seg with matched_recipe = Some recipe }
+      | NoMatch -> seg
+    ) segments in
+    (* Only return chain result if at least one segment matched *)
+    if List.exists (fun s -> s.matched_recipe <> None) matched_segments then
+      Some matched_segments
+    else
+      None

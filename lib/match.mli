@@ -23,3 +23,17 @@ val similarity : string -> string -> float
 
 val best_match : command:string -> threshold:float -> Recipe.t list -> result
 (** Find best matching recipe above threshold *)
+
+(** Chain matching for commands with &&, ||, ; *)
+
+type segment_match = {
+  segment: string;
+  operator: string option;
+  matched_recipe: Recipe.t option;
+}
+
+val split_chain : string -> segment_match list
+(** Split command by chain operators *)
+
+val match_chain : command:string -> threshold:float -> Recipe.t list -> segment_match list option
+(** Match each segment of a chain. Returns None if not a chain or no matches. *)

@@ -1,5 +1,17 @@
 # psst development recipes
 
+# === Quick test recipes (no side effects) ===
+list:
+    @ls -la
+
+greet:
+    @echo "hello"
+
+show-date:
+    @date
+
+# === Build recipes ===
+
 # Build
 build:
     @opam exec -- dune build
