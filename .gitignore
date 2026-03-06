@@ -3,3 +3,7 @@ _opam/
 *.install
 .merlin
 dist/
+
+# Dolt database files (added by bd init)
+.dolt/
+*.db
